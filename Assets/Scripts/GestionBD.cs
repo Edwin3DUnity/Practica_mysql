@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class GestionBD : MonoBehaviour
@@ -9,7 +11,10 @@ public class GestionBD : MonoBehaviour
     public InputField txtContraseña;
     public string     nombreUsuario;
     public int        scoreUsuario;
+    public int         idUsuario;
     public bool     sesionIniciada = false;
+
+    public static GestionBD singleton;
     
     ///  Respuestas WEB
     ///         400  -  No pudo establecer conexion;
@@ -20,7 +25,7 @@ public class GestionBD : MonoBehaviour
     ///
     ///          200  - Datos encontrados
     ///          201  - Usuario registrado
-    ///
+    ///          202  - Score Actualizado
     ///
     ///
     ///
@@ -31,7 +36,7 @@ public class GestionBD : MonoBehaviour
     public void iniciarSesion()
     {
         StartCoroutine(Login());
-        StartCoroutine(Datos());
+        
     }
     
     public void RegistrarUsuario()
@@ -39,11 +44,27 @@ public class GestionBD : MonoBehaviour
         StartCoroutine(Registrar());
     }
 
-    
+    public void Score_Actualizar(int nScore)
+    {
+        StartCoroutine(ActualizarScore( nScore));
+    }
+
+    private void Awake()
+    {
+        if (singleton == null)
+        {
+            singleton = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
     // Start is called before the first frame update
     void Start()
     {
-        
+        DontDestroyOnLoad(this.gameObject);
     }
 
     // Update is called once per frame
@@ -60,6 +81,7 @@ public class GestionBD : MonoBehaviour
      if (coneccion.text == "200")
      {
          print("El Usuario si existe");
+         StartCoroutine(Datos());
      }else if (coneccion.text == "401")
      {
          print("Usuario o contraseña incorrectos");
@@ -89,7 +111,9 @@ public class GestionBD : MonoBehaviour
              {
                  nombreUsuario = nDdatos[0];
                  scoreUsuario = int.Parse(nDdatos[1]);
+                 idUsuario = int.Parse(nDdatos[2]);
                  sesionIniciada = true;
+                 SceneManager.LoadScene("Inicio juego");
              }
          }
       
@@ -118,5 +142,27 @@ public class GestionBD : MonoBehaviour
         }
       
     }
+    
+    IEnumerator ActualizarScore(int nScore)
+    {
+        WWW coneccion = new WWW("http://localhost/pract/score.php?uss="+ txtUsuario.text + "&nScore=" + nScore.ToString());
+        yield return(coneccion);
+        //   Debug.Log(coneccion.text);
+        if (coneccion.text == "1")
+        {
+            Debug.LogError("Usuario no existe");
+        }
+        else if(coneccion.text == "202")
+        {
+            print("Datos actualizados correctamente");
+            scoreUsuario = nScore;
+        }
+        else
+        {
+            Debug.LogError("Error en la coneccion con la base de datos al intentar actualizar el score");
+        }
+      
+    }
+
     
 }
