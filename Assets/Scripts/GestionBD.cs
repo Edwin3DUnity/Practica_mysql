@@ -9,8 +9,22 @@ public class GestionBD : MonoBehaviour
     public InputField txtContraseña;
     public string     nombreUsuario;
     public int        scoreUsuario;
+    public bool     sesionIniciada = false;
     
-    
+    ///  Respuestas WEB
+    ///         400  -  No pudo establecer conexion;
+    ///         401  -  No encontró datos
+    ///         402  -  eL usuario ya existe
+    /// 
+    ///
+    ///
+    ///          200  - Datos encontrados
+    ///          201  - Usuario registrado
+    ///
+    ///
+    ///
+    ///
+    /// 
     
     
     //Metodos de llamado
@@ -19,6 +33,12 @@ public class GestionBD : MonoBehaviour
         StartCoroutine(Login());
         StartCoroutine(Datos());
     }
+    
+    public void RegistrarUsuario()
+    {
+        StartCoroutine(Registrar());
+    }
+
     
     // Start is called before the first frame update
     void Start()
@@ -69,10 +89,34 @@ public class GestionBD : MonoBehaviour
              {
                  nombreUsuario = nDdatos[0];
                  scoreUsuario = int.Parse(nDdatos[1]);
+                 sesionIniciada = true;
              }
          }
       
     }
     
+    IEnumerator Registrar()
+    {
+        WWW coneccion = new WWW("http://localhost/pract/registro.php?uss="+ txtUsuario.text + "&pss=" + txtContraseña.text);
+        yield return(coneccion);
+        //   Debug.Log(coneccion.text);
+        if (coneccion.text == "402")
+        {
+            Debug.LogError("Usuario ya existe");
+        }
+        else if(coneccion.text == "201")
+        {
+
+            nombreUsuario = txtUsuario.text;
+            scoreUsuario = 0;
+            sesionIniciada = true;
+
+        }
+        else
+        {
+            Debug.LogError("Error en la coneccion con la base de datos al intentar registrar");
+        }
+      
+    }
     
 }
